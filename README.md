@@ -128,7 +128,7 @@ You should see the following output:
 
 
 ## License
-[MIT](./LICENSE)
+[MIT](./LICENCE)
 
 ---
 
