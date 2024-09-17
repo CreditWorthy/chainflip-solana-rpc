@@ -125,3 +125,15 @@ You should see the following output:
 ```json
 {"jsonrpc":"2.0","result":"ok","id":1}
 ```
+
+
+## License
+[MIT](./LICENSE)
+
+---
+
+<p align="center">
+    Made with 💚 in Berlin
+    <br>
+    Crafted with care by Chainflip Labs
+</p>
