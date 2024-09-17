@@ -1,0 +1,12 @@
+all:
+  children:
+    solana-devnet-rpcs:
+      vars:
+        network: devnet
+        solana_public_rpc_url: https://api.devnet.solana.com
+        solana_user_password: solana
+        allow_chainflip_prometheus_server: true
+      hosts:
+        solana-devnet-rpc:
+          ansible_host: 103.219.168.231
+          ansible_hostname: my-solana-hostname

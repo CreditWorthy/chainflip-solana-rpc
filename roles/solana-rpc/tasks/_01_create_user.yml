@@ -1,0 +1,20 @@
+---
+- name: Create Solana Group
+  ansible.builtin.group:
+    name: solana
+    state: present
+  tags: create_user
+- name: Create Solana User
+  ansible.builtin.user:
+    name: "{{ solana_user }}"
+    shell: /bin/bash
+    home: /home/solana
+    createhome: true
+    state: present
+    system: false
+    group: solana
+    groups: sudo
+    append: true
+    password: "{{ solana_user_password | password_hash('sha512') }}"
+    update_password: on_create
+  tags: create_user

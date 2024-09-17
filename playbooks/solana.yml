@@ -1,0 +1,8 @@
+---
+- name: Configure Monitoring
+  hosts: all
+  become: true
+  become_user: root
+
+  roles:
+    - name: solana-rpc

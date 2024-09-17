@@ -1,0 +1,154 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install JQ
+  ansible.builtin.apt:
+    name: jq
+    state: present
+
+- name: Install systemd-timesyncd
+  ansible.builtin.apt:
+    name: systemd-timesyncd
+    state: present
+
+- name: Enable systemd-timesyncd service
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    enabled: true
+
+- name: Ensure primary NTP server is configured
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/timesyncd.conf
+    regexp: '^NTP='
+    line: 'NTP=time.google.com'
+    state: present
+
+- name: Ensure fallback NTP server is configured
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/timesyncd.conf
+    regexp: '^FallbackNTP='
+    line: 'FallbackNTP=ntp.ubuntu.com'
+    state: present
+
+- name: Restart systemd-timesyncd
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+    enabled: true
+
+- name: Start systemd-timesyncd service
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: started
+
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  failed_when: false
+
+- name: Remove existing swap file (orginal)
+  ansible.builtin.file:
+    path: /swapfile
+    state: absent
+  failed_when: false
+
+- name: Remove existing swap file (new)
+  ansible.builtin.file:
+    path: "{{ swapfile_path }}"
+    state: absent
+  failed_when: false
+
+- name: Create a new swap file
+  ansible.builtin.command: fallocate -l {{ swapfile_size }} {{ swapfile_path }}
+
+- name: Set the correct permissions on the swap file
+  ansible.builtin.file:
+    path: "{{ swapfile_path }}"
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Make the file a swap file
+  ansible.builtin.command: mkswap {{ swapfile_path }}
+
+- name: Add swap file to /etc/fstab
+  ansible.posix.mount:
+    name: none
+    src: "{{ swapfile_path }}"
+    fstype: swap
+    opts: sw
+    state: present
+
+- name: Enable swap
+  ansible.builtin.command: swapon {{ swapfile_path }}
+
+- name: Verify swap is active
+  ansible.builtin.command: swapon --show
+  register: swap_status
+
+- name: Display swap status
+  ansible.builtin.debug:
+    var: swap_status.stdout_lines
+
+
+- name: Increase UDP buffer sizes and other parameters
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/21-solana-validator.conf
+    content: |
+      # Increase UDP buffer sizes
+      net.core.rmem_default = 134217728
+      net.core.rmem_max = 134217728
+      net.core.wmem_default = 134217728
+      net.core.wmem_max = 134217728
+
+      # Increase memory mapped files limit
+      vm.max_map_count = 1000000
+
+      # Increase number of allowed open file descriptors
+      fs.nr_open = 1000000
+    mode: '0644'
+
+- name: Apply the new sysctl settings
+  ansible.builtin.command: sysctl -p /etc/sysctl.d/21-solana-validator.conf
+
+- name: Create ledger Directory
+  ansible.builtin.file:
+    path: "{{ solana_data_path }}/ledger"
+    state: directory
+    owner: "{{ solana_user }}"
+    group: "{{ solana_user }}"
+    mode: '0755'
+
+- name: Create accounts Directory
+  ansible.builtin.file:
+    path: "{{ solana_data_path }}/accounts"
+    state: directory
+    owner: "{{ solana_user }}"
+    group: "{{ solana_user }}"
+    mode: '0755'
+
+- name: Ensure cpufrequtils is installed (Debian)
+  ansible.builtin.apt:
+    name: cpufrequtils
+    state: present
+
+- name: Get the number of CPU cores
+  ansible.builtin.command: nproc
+  register: cpu_cores
+
+- name: Set CPU governor to performance for each core
+  ansible.builtin.command: cpufreq-set -c {{ item }} -g performance
+  with_sequence: start=0 end={{ cpu_cores.stdout | int - 1 }}
+
+- name: Verify CPU governor
+  ansible.builtin.command: cpufreq-info -o
+  register: cpu_governor_output
+
+- name: Display CPU governor output
+  ansible.builtin.debug:
+    var: cpu_governor_output.stdout
+
+- name: Update Hostname
+  ansible.builtin.hostname:
+    name: "{{ ansible_host }}"
+  tags: hostname

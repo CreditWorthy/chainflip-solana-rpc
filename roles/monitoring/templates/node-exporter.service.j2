@@ -1,0 +1,17 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=Node Exporter
+
+[Service]
+User=node-exporter
+Group=node-exporter
+ExecStart=/usr/local/bin/node-exporter \
+            --collector.systemd \
+            --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/) \
+            --no-collector.nvme
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=Process Exporter
+
+[Service]
+User=process-exporter
+Group=process-exporter
+ExecStart=/usr/local/bin/process-exporter \
+  -config.path /etc/process-exporter/process-exporter.yaml
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

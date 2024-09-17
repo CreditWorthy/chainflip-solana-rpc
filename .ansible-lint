@@ -1,0 +1,39 @@
+---
+# More details: https://ansible-lint.readthedocs.io/configuring/
+exclude_paths:
+  - .cache/
+  - .github/
+  - .git/
+  - .tox/
+  - '*/secrets.enc.y*ml'
+  - '*/secrets.y*ml'
+  - '*/docker-compose.y*ml'
+  - '.sops.y*ml'
+  - '**/molecule/*'
+  - '**/__pycache__/*'
+  - '**/.yamllint'
+  - '**/test.ym*l'
+  - '**/euc1-*/*.y*ml'
+  - '**/_apps/*'
+  - '**/*values.yaml'
+warn_list:
+  - yaml[octal-values]
+  - schema[playbook]
+  - name[play]
+  - yaml[empty-lines]
+  - key-order[task]
+  - role-name
+  - schema[vars]
+  - risky-file-permissions
+  - ignore-errors
+  - experimental
+  - run_once[task]
+skip_list:
+  - no-changed-when
+  - no-handler
+  - yaml[line-length]
+  - schema[playbook]
+  - run-once[task]
+  - package-latest
+  - var-naming[no-role-prefix]
+  - command-instead-of-shell

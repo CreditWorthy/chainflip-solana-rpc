@@ -1,0 +1,24 @@
+---
+- name: Configure Monitoring
+  hosts: all
+  become: true
+  become_user: root
+  pre_tasks:
+    - name: Restart Journald
+      ansible.builtin.service:
+        name: systemd-journald
+        state: restarted
+
+    - name: Gather services facts
+      ansible.builtin.service_facts:
+
+    - name: Set services status
+      ansible.builtin.set_fact:
+        promtail_status: "{{ ansible_facts.services['promtail.service'].state | default('not found') }}"
+        node_exporter_status: "{{ ansible_facts.services['node-exporter.service'].state | default('not found') }}"
+
+  roles:
+    - name: monitoring
+      when:
+        - promtail_status != 'running'
+        - node_exporter_status != 'running'

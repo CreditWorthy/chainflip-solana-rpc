@@ -1,0 +1,85 @@
+---
+- name: Download Solana install script
+  ansible.builtin.get_url:
+    url: https://release.solana.com/{{ solana_version }}/install
+    dest: "{{ solana_base_path }}/install_solana.sh"
+    mode: '0755'
+
+- name: Install Solana CLI Tools
+  ansible.builtin.shell: "{{ solana_base_path }}/install_solana.sh"
+  environment:
+    HOME: "{{ solana_base_path }}"
+    USER: "{{ solana_user }}"
+  args:
+    creates: "{{ solana_base_path }}/.local/share/solana/install/active_release/bin/solana"
+
+- name: Add Solana CLI to user's PATH in .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ solana_base_path }}/.bashrc"
+    regexp: '^export PATH=.*solana/install/active_release/bin'
+    line: 'export PATH="{{ solana_base_path }}/.local/share/solana/install/active_release/bin:$PATH"'
+    state: present
+    insertafter: EOF
+
+- name: Ensure correct ownership of Solana installation
+  ansible.builtin.file:
+    path: "{{ solana_base_path }}/.local/share/solana"
+    state: directory
+    recurse: true
+    owner: "{{ solana_user }}"
+    group: "{{ solana_user }}"
+
+- name: Source .bashrc for current session
+  ansible.builtin.shell: source "{{ solana_base_path }}/.bashrc"
+  args:
+    executable: /bin/bash
+
+- name: Set Solana config URL
+  ansible.builtin.shell: |
+    solana config set --url {{ solana_public_rpc_url }}
+  environment:
+    PATH: "{{ solana_base_path }}/.local/share/solana/install/active_release/bin:{{ ansible_env.PATH }}"
+  args:
+    executable: /bin/bash
+
+- name: Create Solana Keys
+  ansible.builtin.shell: |
+    solana-keygen new --no-bip39-passphrase --outfile {{ solana_base_path }}/validator-keypair.json --force
+  environment:
+    PATH: "{{ solana_base_path }}/.local/share/solana/install/active_release/bin:{{ ansible_env.PATH }}"
+  args:
+    executable: /bin/bash
+
+- name: Change ownership of validator keypair
+  ansible.builtin.file:
+    path: "{{ solana_base_path }}/validator-keypair.json"
+    owner: "{{ solana_user }}"
+    group: "{{ solana_user }}"
+
+- name: Create Solana Systemd Service
+  ansible.builtin.template:
+    src: solana.service.j2
+    dest: /etc/systemd/system/solana.service
+    mode: '0644'
+
+- name: Copy start script
+  ansible.builtin.template:
+    src: solana.{{ network }}.sh.j2
+    dest: "{{ solana_base_path }}/solana.sh"
+    mode: '0755'
+
+- name: Change ownership of start script
+  ansible.builtin.file:
+    path: "{{ solana_base_path }}/solana.sh"
+    owner: "{{ solana_user }}"
+    group: "{{ solana_user }}"
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Start Solana Validator Service
+  ansible.builtin.systemd:
+    name: solana
+    state: restarted
+    enabled: true

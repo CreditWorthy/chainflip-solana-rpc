@@ -1,0 +1,12 @@
+---
+# defaults file for solana-rpc
+solana_user: solana
+rpc_http_port: 8899
+solana_version: v1.18.18
+swapfile_size: 64G
+swapfile_path: /swapfile
+solana_base_path: /home/{{ solana_user }}
+solana_data_path: "{{ solana_base_path }}/solana-data"
+allow_chainflip_prometheus_server: true
+solana_public_rpc_url: https://api.devnet.solana.com
+chainflip_prometheus_server_ip: 46.101.193.234

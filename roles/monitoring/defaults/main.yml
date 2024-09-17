@@ -1,0 +1,40 @@
+---
+# defaults file for chainflip_monitoring
+monitoring_system_users:
+  - node-exporter
+  - promtail
+  - process-exporter
+
+monitoring_node_exporter_version: 1.8.2
+monitoring_promtail_version: 3.1.1
+monitoring_process_exporter_version: 0.8.3
+
+monitoring_external_services:
+  - name: node-exporter
+    base_url: >
+      https://github.com/prometheus/node_exporter/releases/download/v{{ monitoring_node_exporter_version }}/node_exporter-{{ monitoring_node_exporter_version
+      }}.linux-amd64.tar.gz
+    unarchived_location: node_exporter-{{ monitoring_node_exporter_version }}.linux-amd64/node_exporter
+  - name: promtail
+    base_url: https://github.com/grafana/loki/releases/download/v{{ monitoring_promtail_version }}/promtail-linux-amd64.zip
+    unarchived_location: promtail-linux-amd64
+  - name: process-exporter
+    base_url: >
+      https://github.com/ncabatoff/process-exporter/releases/download/v{{ monitoring_process_exporter_version }}/process-exporter-{{
+      monitoring_process_exporter_version }}.linux-amd64.tar.gz
+    unarchived_location: process-exporter-{{ monitoring_process_exporter_version }}.linux-amd64/process-exporter
+
+promtail_default_scrape_configs:
+  - job_name: systemd
+    journal:
+      max_age: 12h
+      labels:
+        job_name: systemd
+        host: "{{ ansible_host }}"
+    relabel_configs:
+      - source_labels: [__journal__systemd_unit]
+        target_label: unit
+
+promtail_extra_scrape_configs: []
+
+promtail_scrape_configs: "{{ promtail_default_scrape_configs + promtail_extra_scrape_configs }}"

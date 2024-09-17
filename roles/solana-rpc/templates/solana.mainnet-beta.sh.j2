@@ -1,0 +1,25 @@
+#!/bin/bash
+solana-validator \
+    --identity {{ solana_base_path }}/validator-keypair.json \
+    --known-validator 7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2 \
+    --known-validator GdnSyH3YtwcxFvQrVVJMm1JhTS4QVX7MFsX56uJLUfiZ \
+    --known-validator DE1bawNcRJB9rVm3buyMVfr8mBEoyyu73NBovf2oXJsJ \
+    --known-validator CakcnaRDHka2gXyfbEd2d3xsvkJkqsLw2akB3zsN1D2S \
+    --full-rpc-api \
+    --private-rpc \
+    --no-voting \
+    --ledger {{ solana_base_path }}/solana-data/ledger \
+    --accounts {{ solana_base_path }}/solana-data/accounts \
+    --rpc-port {{ rpc_http_port }} \
+    --dynamic-port-range 8000-8020 \
+    --no-port-check \
+    --entrypoint entrypoint.mainnet-beta.solana.com:8001 \
+    --entrypoint entrypoint2.mainnet-beta.solana.com:8001 \
+    --entrypoint entrypoint3.mainnet-beta.solana.com:8001 \
+    --entrypoint entrypoint4.mainnet-beta.solana.com:8001 \
+    --entrypoint entrypoint5.mainnet-beta.solana.com:8001 \
+    --expected-genesis-hash 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d \
+    --wal-recovery-mode skip_any_corrupted_record \
+    --limit-ledger-size \
+    --enable-rpc-transaction-history \
+    --log -

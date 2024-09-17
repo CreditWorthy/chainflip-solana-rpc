@@ -1,0 +1,9 @@
+---
+- name: Create Solana User
+  ansible.builtin.include_tasks: _01_create_user.yml
+- name: Configure Firewall
+  ansible.builtin.include_tasks: _02_ufw.yml
+- name: Pre-setup
+  ansible.builtin.include_tasks: _03_pre_setup.yml
+- name: Install Solana
+  ansible.builtin.include_tasks: _04_install_solana.yml

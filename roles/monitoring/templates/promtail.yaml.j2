@@ -1,0 +1,17 @@
+{{ ansible_managed | comment }}
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /etc/promtail/positions.yaml
+
+client:
+  url: https://loki-community.chainflip.xyz/loki/api/v1/push
+  external_labels:
+    host: "{{ ansible_host }}"
+    hostname: "{{ ansible_hostname }}-{{ ansible_host }}"
+    network: "{{ network }}"
+
+scrape_configs:
+{{ promtail_scrape_configs | to_nice_yaml(indent=2) }}

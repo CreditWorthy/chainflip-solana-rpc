@@ -1,0 +1,106 @@
+---
+- name: Install required system dependencies
+  ansible.builtin.apt:
+    state: present
+    name:
+      - unzip
+  register: packages_installed
+  until: packages_installed is successful
+  delay: 10
+  retries: 3
+
+- name: Create system users
+  with_items: "{{ monitoring_system_users }}"
+  ansible.builtin.user:
+    user: "{{ item }}"
+    state: present
+    system: true
+
+- name: Add "promtail" to systemd group
+  ansible.builtin.user:
+    user: promtail
+    groups: promtail,systemd-journal
+
+- name: Create service directories
+  with_items: "{{ monitoring_system_users }}"
+  ansible.builtin.file:
+    path: /etc/{{ item }}
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: "0755"
+
+- name: Download monitoring services
+  with_items: "{{ monitoring_external_services }}"
+  ansible.builtin.get_url:
+    url: "{{ item.base_url }}"
+    dest: /tmp/{{ item.name }}.zip
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "0644"
+    force: true
+
+- name: Unarchive monitoring services
+  with_items: "{{ monitoring_external_services }}"
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    src: /tmp/{{ item.name }}.zip
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    remote_src: true
+
+- name: Install monitoring services in $PATH
+  with_items: "{{ monitoring_external_services }}"
+  ansible.builtin.copy:
+    dest: /usr/local/bin/{{ item.name }}
+    src: /tmp/{{ item.unarchived_location }}
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "0755"
+    remote_src: true
+
+- name: Create monitoring systemd configs
+  with_items: "{{ monitoring_external_services }}"
+  ansible.builtin.template:
+    dest: /etc/systemd/system/{{ item.name }}.service
+    src: "{{ item.name }}.service.j2"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "0644"
+
+- name: Restart Journald
+  ansible.builtin.systemd:
+    name: systemd-journald
+    state: restarted
+
+- name: Enable monitoring systemd services on boot
+  with_items: "{{ monitoring_external_services }}"
+  ansible.builtin.systemd:
+    name: "{{ item.name }}"
+    daemon_reload: true
+    enabled: true
+
+- name: Create promtail config file
+  ansible.builtin.template:
+    dest: /etc/promtail/promtail.yaml
+    src: promtail.yaml.j2
+    owner: promtail
+    group: promtail
+    mode: "0644"
+
+- name: Create process exporter config file
+  ansible.builtin.template:
+    dest: /etc/process-exporter/process-exporter.yaml
+    src: process-exporter.yaml.j2
+    owner: process-exporter
+    group: process-exporter
+    mode: "0644"
+
+- name: Start all monitoring services
+  with_items:
+    - node-exporter
+    - promtail
+    - process-exporter
+  ansible.builtin.systemd:
+    state: restarted
+    name: "{{ item }}"

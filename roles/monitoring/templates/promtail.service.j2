@@ -1,0 +1,14 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=Promtail
+
+[Service]
+User=promtail
+WorkingDirectory=/etc/promtail
+ExecStart=/usr/local/bin/promtail -config.file=promtail.yaml -log.level=error
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
