@@ -8,5 +8,5 @@ all:
         allow_chainflip_prometheus_server: true
       hosts:
         solana-devnet-rpc:
-          ansible_host: 103.219.168.231
+          ansible_host: 192.168.1.123
           ansible_hostname: my-solana-hostname
