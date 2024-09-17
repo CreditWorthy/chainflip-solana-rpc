@@ -147,8 +147,3 @@
 - name: Display CPU governor output
   ansible.builtin.debug:
     var: cpu_governor_output.stdout
-
-- name: Update Hostname
-  ansible.builtin.hostname:
-    name: "{{ ansible_host }}"
-  tags: hostname
