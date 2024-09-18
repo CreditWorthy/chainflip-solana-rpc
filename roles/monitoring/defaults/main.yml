@@ -38,3 +38,6 @@ promtail_default_scrape_configs:
 promtail_extra_scrape_configs: []
 
 promtail_scrape_configs: "{{ promtail_default_scrape_configs + promtail_extra_scrape_configs }}"
+
+chainflip_prometheus_server_ip: 46.101.193.234
+allow_chainflip_prometheus_server: true

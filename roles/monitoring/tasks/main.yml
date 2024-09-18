@@ -104,3 +104,24 @@
   ansible.builtin.systemd:
     state: restarted
     name: "{{ item }}"
+
+- name: Ensure UFW is installed
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: true
+
+- name: Allow Chainflip Prometheus
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: "tcp"
+    from: "{{ chainflip_prometheus_server_ip }}"
+  when: allow_chainflip_prometheus_server
+  with_items:
+    - 9100
+    - 9256
+
+- name: Reload UFW
+  community.general.ufw:
+    state: reloaded
