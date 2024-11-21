@@ -1,9 +1,15 @@
 ---
+- name: Remove existing Solana installation
+  ansible.builtin.file:
+    path: "{{ solana_base_path }}/.local/share/solana"
+    state: absent
+
 - name: Download Solana install script
   ansible.builtin.get_url:
-    url: https://release.solana.com/{{ solana_version }}/install
+    url: https://release.anza.xyz/{{ agave_client_version }}/install
     dest: "{{ solana_base_path }}/install_solana.sh"
     mode: '0755'
+    force: true
 
 - name: Install Solana CLI Tools
   ansible.builtin.shell: "{{ solana_base_path }}/install_solana.sh"
